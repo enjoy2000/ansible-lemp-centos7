@@ -1,0 +1,13 @@
+---
+- hosts: default
+  sudo: root
+  roles:
+  # - common
+  # - mariadb
+  # - nginx
+  - php-fpm-71
+  - firewalld
+  # - sample
+  # - nginx-conf
+  # - youtrack
+  # - varnish

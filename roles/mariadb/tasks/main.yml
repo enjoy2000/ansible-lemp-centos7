@@ -1,0 +1,41 @@
+---
+- name: Copy mariadb repo file
+  template: src=mariadb.repo.j2 dest=/etc/yum.repos.d/MariaDB.repo
+
+- name: Install Percona Database
+  yum: name={{ item }} state=present
+  with_items:
+  - mariadb
+  - mariadb-server
+  - MySQL-python
+
+- name: Load default Mysql configuration file
+  template: src=my.cnf.j2 dest=/etc/my.cnf
+
+- name: Automatic load when boot
+  command: systemctl enable mariadb
+
+- name: Be sure mysqld is running and enable
+  service: name=mariadb state=running enabled=true
+
+- name: Update mysql root password
+  mysql_user: name=root host={{ item }} password={{root_db_password}} 
+  ignore_errors: True
+  with_items:   
+   - 127.0.0.1
+   - ::1
+   - localhost
+  notify:
+   - Restart mysqld.service
+
+- name: Remove anonymous users
+  mysql_user: name='' host={{ item }} login_user={{root_db_user}} login_password={{root_db_password}} state=absent
+  with_items:   
+   - 127.0.0.1
+   - ::1
+   - localhost  
+
+- name: Remove the test database
+  mysql_db: name=test login_user={{root_db_user}} login_password={{root_db_password}} state=absent
+  notify:
+   - Restart mysqld.service
